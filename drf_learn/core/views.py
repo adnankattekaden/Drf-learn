@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
 import json
+from . models import MissedIngredients
+from . serializers import MissedIngredientsSerializer
 # Create your views here.
 
 
@@ -20,6 +22,10 @@ def test(request):
         r = requests.get('https://api.spoonacular.com/recipes/complexSearch?query='+query+'&number='+number+'&apiKey='+apiKey+'&cuisine='+cuisine+'&fillIngredients='+fillIngredients+'&diet='+diet)
         requested_data = r.json()
         results = requested_data['results']
+        for result in results[0]['missedIngredients']:
+            MissedIngredients.objects.create(ids=result['id'],amount=result['amount'],unit=result['unit'],name=result['name'],image=result['image'])
         return Response(results[0]['missedIngredients'])
     else:
-        return Response({"message": "Get METHOD"})
+        missed_incrediants_data = MissedIngredients.objects.all()
+        missed_incredients = MissedIngredientsSerializer(missed_incrediants_data,many=True)
+        return Response(missed_incredients.data)
